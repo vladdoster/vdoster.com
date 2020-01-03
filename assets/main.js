@@ -93,7 +93,7 @@ var Commands = function (hostline, user, group) {
 				'drwxr-xr-x   6 ' + utils.formatSpaces('root', 5) + ' ' + utils.formatSpaces('root', 5) + ' 4.0K Jan  6  18:57 ..\n' +
 				softLink(user, group, 'github', 'https://github.vdoster.com') + '\n' +
 				softLink(user, group, 'linkedin', 'https://linkedin.vdoster.com') + '\n' + 
-				file(user, group, 'resume.pdf', 'https://github.com/vladdoster/slice-of-internet/raw/master/assets/resume.pdf')
+				file(user, group, 'resume.pdf', 'https://github.com/vladdoster/slice-of-internet/raw/resume-changes/assets/resume.pdf')
 		},
 		'dd_partition': {
 			typedCommand: 'dd if=/dev/urandom of=/dev/' + dd_device + ' bs=' + dd_block_size + 'M',
