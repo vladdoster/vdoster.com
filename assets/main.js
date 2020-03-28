@@ -91,7 +91,7 @@ var Commands = function (hostline, user, group) {
 			duration: 100,
 			output: 'drwx------ 113 ' + utils.formatSpaces(user, 5) + ' ' + utils.formatSpaces(group, 5) + ' 4.0K Jul 24  17:00 .\n' +
 				'drwxr-xr-x   6 ' + utils.formatSpaces('root', 5) + ' ' + utils.formatSpaces('root', 5) + ' 4.0K Jan  6  18:57 ..\n' +
-				softLink(user, group, 'file server', window.open("http://files.vdoster.com", "_blank");) + '\n' +
+				softLink(user, group, 'file server', 'http://files.vdoster.com') + '\n' +
 				softLink(user, group, 'github', 'https://github.vdoster.com') + '\n' +
 				softLink(user, group, 'linkedin', 'https://linkedin.vdoster.com') + '\n' + 
 				file(user, group, 'resume.pdf', 'https://github.com/vladdoster/slice-of-internet/raw/resume-changes/assets/resume.pdf')
