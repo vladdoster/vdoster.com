@@ -6,13 +6,13 @@ const files = {
     content: fs.readFileSync(path.join(__dirname, 'public', 'files-vdoster.js'), 'utf8'),
     type: 'text/javascript'
   },
+  '/favicon.ico': {
+    content: fs.readFileSync(path.join(__dirname, 'public', 'favicon.ico'), 'utf8'),
+    type: 'image/png'
+  },
   '/': {
     content: fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8'),
     type: 'text/html'
-  },
-  '/favicon.ico': {
-    content: fs.readFileSync(path.join(__dirname, 'public', 'favicon.ico'), 'utf8'),
-    type: 'image/x-icon'
   }
 }
 
