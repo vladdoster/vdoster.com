@@ -1,6 +1,6 @@
 name: Deploy staging to AWS
 
-on: 
+on:
   pull_request:
     types: [labeled]
 
@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-        
+
       - name: Download built artifacts
         uses: actions/download-artifact@master
         with:

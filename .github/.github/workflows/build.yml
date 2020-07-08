@@ -1,9 +1,9 @@
-name: ci build
+name: CI build
 
-on: 
+on:
   push:
     branches-ignore:
-      - master
+      - production
 
 jobs:
   build:
@@ -26,17 +26,17 @@ jobs:
         os: [ubuntu-lastest, windows-2016]
         node-version: [8.x, 10.x]
     steps:
-    - uses: actions/checkout@v1
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
-    - uses: actions/download-artifact@master
-      with:
-        name: webpack artifacts
-        path: public
-    - name: npm install
-      run: |
-        npm install
-      env:
-        CI: true
+      - uses: actions/checkout@v1
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - uses: actions/download-artifact@master
+        with:
+          name: webpack artifacts
+          path: public
+      - name: npm install
+        run: |
+          npm install
+        env:
+          CI: true

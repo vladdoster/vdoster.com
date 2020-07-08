@@ -1,16 +1,14 @@
 name: Deploy production to AWS
 
-on: 
+on:
   push:
     branches:
       - master
 
 jobs:
-  
   build:
     runs-on: ubuntu-latest
     steps:
-
       - uses: actions/checkout@v1
 
       - name: npm install and build webpack
@@ -28,7 +26,6 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-
       - uses: actions/checkout@v1
 
       - name: Download build artifacts
@@ -38,7 +35,7 @@ jobs:
           path: public
 
       - name: Push source code to AWS
-        uses:  github/deploy-nodejs@master
+        uses: github/deploy-nodejs@master
         env:
           AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
           AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
@@ -48,9 +45,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-
       - uses: actions/checkout@v1
-        
+
       - name: Download build artifacts
         uses: actions/download-artifact@master
         with:
