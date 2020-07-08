@@ -1,8 +1,14 @@
 name: Deploy staging to AWS
 
 on:
+
   pull_request:
     types: [labeled]
+
+  push:
+    branches:    
+      - devel
+      - staging
 
 jobs:
   build:
