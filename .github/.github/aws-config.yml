@@ -1,0 +1,25 @@
+---
+
+###############################################
+# AWS Configuration file deploy GitHub Action #
+###############################################
+
+########################################
+# AWS S3 Bucket for package and deploy #
+########################################
+s3_bucket: files.vdoster.com
+
+##################################
+# AWS Cloud Formation Stack name #
+##################################
+aws_stack_name: vdoster
+
+####################
+# AWS SAM Template #
+####################
+sam_template: vdoster_serverless_application_model.yml
+
+################################
+# Region for connection to AWS #
+################################
+region: us-east-1
