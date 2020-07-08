@@ -1,4 +1,4 @@
-var BUCKET_URL = 'http://files.vdoster.com.s3.amazonaws.com'
+var BUCKET_URL = 'https://files.vdoster.com.s3.amazonaws.com'
 var EXCLUDE_FILE = ['index.html'] // array of file names that shouldnt be displayed
 var S3BL_IGNORE_PATH = true
 var S3B_ROOT_DIR = ''
