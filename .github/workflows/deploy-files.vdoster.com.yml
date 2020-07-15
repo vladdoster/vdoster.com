@@ -1,4 +1,4 @@
-name: Deploy staging to AWS
+name: build domain source code
 
 on:
   pull_request:
