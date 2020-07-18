@@ -1,6 +1,6 @@
 name: build vdoster.com
 'on':
-  pull_request:
+  push:
     paths:
       - 'vdoster.com/**'
       - '.github/workflows/build_vdoster.com.yml'
