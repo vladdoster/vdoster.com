@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v1
       - name: copy package.json into working dir
         run: |
-          cp ../package.json.lock .
+          cp ../package-lock.json .
           cp ../babel.config.js .
       - name: npm install and build webpack
         run: |
