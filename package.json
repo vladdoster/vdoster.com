@@ -7,8 +7,8 @@
     "src": "src"
   },
   "scripts": {
-    "build": "npx webpack --mode production",
-    "dev": "npx webpack --mode development --watch",
+    "build": "npx webpack --config webpack.config.js --mode production",
+    "dev": "npx webpack --config webpack.config.js --mode development --watch",
     "test": "npx standard && npx jest"
   },
   "author": "vlad doster",
