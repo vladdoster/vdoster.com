@@ -1,4 +1,4 @@
-name: build vdoster.com
+name: build vdoster.com source code
 'on':
   push:
     paths:
