@@ -4,6 +4,8 @@ name: build vdoster.com source code
     paths:
       - 'vdoster.com/**'
       - '.github/workflows/build_vdoster.com.yml'
+      - 'package.json'
+      - 'package-lock.json'
     
 jobs:
   build:
