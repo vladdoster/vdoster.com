@@ -1,8 +1,8 @@
 {
   "name": "actions-template",
   "version": "1.0.0",
-  "description": "Personal file server",
-  "main": "file-server.js",
+  "description": "Compile root domain and secondary domain src code",
+  "main": "Compile source code for *.vdoster.com",
   "directories": {
     "src": "src"
   },
