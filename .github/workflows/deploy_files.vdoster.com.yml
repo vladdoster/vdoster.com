@@ -1,8 +1,9 @@
-name: build domain source code
+name: deploy files.vdoster.com source code
 
 on:
   pull_request:
-    types: [labeled]
+    paths: 
+      - files.vdoster.com/**
 
 jobs:
   build:
