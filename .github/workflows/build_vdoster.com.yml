@@ -1,1 +1,6 @@
-
+name: build vdoster.com
+'on':
+  pull_request:
+    paths:
+      - 'vdoster.com/**'
+      - '.github/workflows/build_vdoster.com.yml'
