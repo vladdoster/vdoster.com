@@ -1,12 +1,16 @@
-name: CI build
-
-on:
-  push:
-    branches-ignore:
-      - production
-
+name: build rap-diablo.vdoster.com
+'on':
+  pull_request:
+    paths:
+      - 'rap-diablo.vdoster.com/**'
+      - '.github/workflows/build_rap-diablo.vdoster.com.yml'
+    
 jobs:
   build:
+    defaults:
+      run:
+        shell: bash
+        working-directory: rap-diablo.vdoster.com
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -19,6 +23,10 @@ jobs:
           name: webpack artifacts
           path: public/
   test-platforms:
+    defaults:
+      run:
+        shell: bash
+        working-directory: rap-diablo.vdoster.com
     runs-on: ubuntu-latest
     needs: build
     strategy:
