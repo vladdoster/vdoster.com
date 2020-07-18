@@ -1,6 +1,8 @@
 name: build rap-diablo.vdoster.com
 'on':
-  pull_request:
+  push:
+    branches:
+      - devel
     paths:
       - 'rap-diablo.vdoster.com/**'
       - '.github/workflows/build_rap-diablo.vdoster.com.yml'
