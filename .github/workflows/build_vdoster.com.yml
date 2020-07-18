@@ -22,6 +22,8 @@ jobs:
           cp ../babel.config.js .
       - name: npm install and build webpack
         run: |
+          ls
+          pwd
           npm install
           npm run build
       - uses: actions/upload-artifact@master
