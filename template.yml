@@ -1,3 +1,13 @@
+
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: "AWS::Serverless-2016-10-31"
+Description: vdoster.com
+
+Parameters:
+  AliasName:
+    Type: String
+    Default: dev
+
 Resources:
   vdoster.com:
     Type: AWS::S3::Bucket
