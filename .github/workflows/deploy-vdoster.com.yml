@@ -11,7 +11,7 @@ jobs:
     - uses: actions/checkout@v1
     - uses: mgenteluci/cloudformation-deploy-action@v1.4.0
       env:
-        AWS_STACK_NAME: 'vdoster.com'
+        AWS_STACK_NAME: 'vdoster'
         AWS_REGION: 'us-east-1'
         AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
         AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
