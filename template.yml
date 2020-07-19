@@ -3,17 +3,10 @@ Description: Creates an S3 bucket configured for hosting a static website, and a
   53 DNS record pointing to the bucket
 Parameters:
   DomainName: vdoster.com
-    Description: The DNS name of an existing Amazon Route 53 hosted zone
     AllowedPattern: (?!-)[a-zA-Z0-9-.]{1,63}(?<!-)
-    ConstraintDescription: DNS zone name
   FullDomainName: vdoster.com
-    Type: String
-    Description: domain name
     AllowedPattern: (?!-)[a-zA-Z0-9-.]{1,63}(?<!-)
-    ConstraintDescription: vdoster.com
   AcmCertificateArn: us-east-1:379009065029:certificate/1fef8a9d-0f41-4656-9191-36d2db04f159
-    Type: String
-    Description: the Amazon Resource Name (ARN) of an AWS Certificate Manager (ACM) certificate.
     AllowedPattern: "arn:aws:acm:.*"
 Mappings:
   RegionMap:
