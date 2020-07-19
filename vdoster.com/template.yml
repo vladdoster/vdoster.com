@@ -1,17 +1,100 @@
-AWSTemplateFormatVersion: "2010-09-09"
-Transform: "AWS::Serverless-2016-10-31"
-Description: vdoster.com
-
-Parameters:
-  AliasName:
-    Type: String
-    Default: dev
-
-Resources:
-  vdoster.com:
-    Type: AWS::S3::Bucket
-    Properties:
-      AccessControl: PublicRead
-      WebsiteConfiguration:
-        IndexDocument: index.html
-        ErrorDocument: error.html
+{
+  "AWSTemplateFormatVersion":"2010-09-09",
+  "Description":"vdoster.com",
+  "Mappings":{
+    "Region2S3WebsiteSuffix":{
+      "us-east-1":{
+        "Suffix":".s3-website-us-east-1.amazonaws.com"
+      }
+    }
+  },
+  "Resources":{
+    "vdoster.com":{
+      "Type":"AWS::S3::Bucket",
+      "Properties":{
+        "AccessControl":"PublicRead",
+        "WebsiteConfiguration":{
+          "IndexDocument":"index.html",
+          "ErrorDocument":"error.html"
+        }
+      }
+    },
+    "WebsiteDNSName":{
+      "Type":"AWS::Route53::RecordSet",
+      "Properties":{
+        "HostedZoneName":{
+          "Fn::Join":[
+            "",
+            [
+              {
+                "Ref":"vdoster.com"
+              },
+              "."
+            ]
+          ]
+        },
+        "Comment":"CNAME redirect custom name to CloudFront distribution",
+        "Name":{
+          "Fn::Join":[
+            "",
+            [
+              {
+                "Ref":"AWS::StackName"
+              },
+              {
+                "Ref":"AWS::AccountId"
+              },
+              ".",
+              {
+                "Ref":"AWS::Region"
+              },
+              ".",
+              {
+                "Ref":"HostedZone"
+              }
+            ]
+          ]
+        },
+        "Type":"CNAME",
+        "TTL":"900",
+        "ResourceRecords":[
+          {
+            "Fn::Join":[
+              "",
+              [
+                "http://",
+                {
+                  "Fn::GetAtt":[
+                    "vdoster.com"
+                  ]
+                }
+              ]
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "Outputs":{
+    "WebsiteURL":{
+      "Value":{
+        "Fn::Join":[
+          "",
+          [
+            "http://",
+            {
+              "Ref":"WebsiteDNSName"
+            }
+          ]
+        ]
+      },
+      "Description":"The URL of the newly created website"
+    },
+    "BucketName":{
+      "Value":{
+        "Ref":"vdoster.com"
+      },
+      "Description":"Name of S3 bucket to hold website content"
+    }
+  }
+}
