@@ -1,7 +1,7 @@
 
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: "AWS::Serverless-2016-10-31"
-Description: vdoster.com
+Description: vdoster_com
 
 Parameters:
   AliasName:
@@ -9,7 +9,7 @@ Parameters:
     Default: dev
 
 Resources:
-  vdoster.com:
+  vdoster_com:
     Type: AWS::S3::Bucket
     Properties:
       AccessControl: PublicRead
