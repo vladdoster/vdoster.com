@@ -1,23 +1,4 @@
-# vdoster.com and lower domains source code
-
-## Source code for following
-
-1. [vdoster.com](http://vdoster.com)
-1. [files.vdoster.com](http://files.vdoster.com)
-1. [rapdiablo.vdoster.com](http://rapdiablo.vdoster.com)
-
-# Adding dependencies
-
-1. Clone locally
-2. Branch from `master` with helpful branch name
-3. Install dependencies
-
-```
-npm install <new dependencies>
-```
-
-4. Update files accordingly
-5. Push to Github to kick-off CI/CD
+# [vdoster.com](https://vdoster.com) source code
 
 ## Author
 

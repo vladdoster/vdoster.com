@@ -69,7 +69,7 @@ var Commands = function(hostline, user, group) {
         .formatSpaces('root', 5) + ' ' + utils.formatSpaces('root', 5) + ' 4.0K Jan  6  18:57 ..\n' + softLink(user, group, 'file server',
           'http://files.vdoster.com') + '\n' + softLink(user, group, 'github', 'http://github.vdoster.com') + '\n' + softLink(user, group, 'linkedin',
           'http://linkedin.vdoster.com') + '\n' + file(user, group, 'resume.pdf',
-          'https://github.com/vladdoster/slice-of-internet/raw/resume-changes/assets/resume.pdf')
+          'https://github.com/vladdoster/resume-src-code/raw/master/resume.pdf')
     },
     'dd_partition': {
       typedCommand: 'dd if=/dev/urandom of=/dev/' + dd_device + ' bs=' + dd_block_size + 'M',
