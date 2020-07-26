@@ -1,5 +1,7 @@
 .html {
-  background: radial-gradient(circle farthest-corner, rgba(0, 20, 0, 0.4), rgba(0, 15, 0, 0.6), rgba(0, 15, 0, 0.8)), url('assets/bg.png') no-repeat center center fixed;
+  background: radial-gradient(circle farthest-corner, rgba(0, 20, 0, 0.4), rgba(0, 15, 0, 0.6), rgba(0, 15, 0, 0.8)), url('assets/bg.png');
+  background-repeat: no-repeat, center, center fixed;
+  background-color: #cccccc;
   background-size: cover;
   background-color: #000;
 }
