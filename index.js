@@ -82,7 +82,7 @@ var Commands = function(hostline, user, group) {
 };
 var Scroller = function(target) {
   hostline = "[root@" + (window.location.hostname || 'localhost') + "]";
-  bash_prompt = utils.spanText('prompt-hostline', hostline, 'prompt-normal', 'prompt-path', "~", 'prompt-normal', "$ ");
+  bash_prompt = utils.spanText('prompt-hostline', hostline, 'prompt-path', "~", 'prompt-normal', "$ ");
   commands = new Commands(hostline, 'vlad', 'vlad');
   textSpeed = 19;
   textSpeedJitter = 12;
