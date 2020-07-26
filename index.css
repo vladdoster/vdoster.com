@@ -1,9 +1,9 @@
 .html {
-  background: radial-gradient(circle farthest-corner, rgba(0, 20, 0, 0.4), rgba(0, 15, 0, 0.6), rgba(0, 15, 0, 0.8)), url('assets/bg.png');
-  background-repeat: no-repeat, center, center fixed;
-  background-color: #cccccc;
-  background-size: cover;
-  background-color: #000;
+  background-image: url("assets/bg.png");
+  background-color: #cccccc;          /* Used if the image is unavailable */
+  background-position: center, fixed; /* Center the image */
+  background-repeat: no-repeat;       /* Do not repeat the image */
+  background-size: cover;             /* Resize the background image to cover the entire 
 }
 
 .body {
