@@ -1,3 +1,9 @@
+.html {
+  background: url('../assets/bg.png' no-repeat center center fixed;
+  background-size: cover;
+  background-color: #000;
+}
+
 .body {
   color: #38e238;
   margin: 2em;
