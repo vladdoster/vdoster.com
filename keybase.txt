@@ -1,0 +1,56 @@
+==================================================================
+https://keybase.io/vlad_doster
+--------------------------------------------------------------------
+
+I hereby claim:
+
+  * I am an admin of https://vdoster.com
+  * I am vlad_doster (https://keybase.io/vlad_doster) on keybase.
+  * I have a public key ASAEZn_gj9XNTA40ByqQlnWdce9R0esFdnO_i9164KoL9Ao
+
+To do so, I am signing this object:
+
+{
+  "body": {
+    "key": {
+      "eldest_kid": "012004667fe08fd5cd4c0e34072a9096759d71ef51d1eb057673bf8bdd7ae0aa0bf40a",
+      "host": "keybase.io",
+      "kid": "012004667fe08fd5cd4c0e34072a9096759d71ef51d1eb057673bf8bdd7ae0aa0bf40a",
+      "uid": "73d68abdc228764f2cdcbfa9877fca19",
+      "username": "vlad_doster"
+    },
+    "merkle_root": {
+      "ctime": 1598756139,
+      "hash": "2358c770704a3f373cc2ecfd6723b3b12e5b6cf7ed0d5bf13b61484be1f756bff78c7ea078207342af7182a94a626df6cad44c37cc1a1de0bc1e97ab8bd64797",
+      "hash_meta": "b1d55779d7f3d3e1ea92aeb3ca05e69af416129b6b5e40d27ca889366806ba09",
+      "seqno": 17420378
+    },
+    "service": {
+      "entropy": "bAs8VBcxvamQf1VPfhW6OSqI",
+      "hostname": "vdoster.com",
+      "protocol": "https:"
+    },
+    "type": "web_service_binding",
+    "version": 2
+  },
+  "client": {
+    "name": "keybase.io go client",
+    "version": "5.5.0"
+  },
+  "ctime": 1598756199,
+  "expire_in": 504576000,
+  "prev": "07b2fe8b22bb896436bb7386e58823524dfb5ffd08ad80410880ae9cfc84be03",
+  "seqno": 7,
+  "tag": "signature"
+}
+
+which yields the signature:
+
+hKRib2R5hqhkZXRhY2hlZMOpaGFzaF90eXBlCqNrZXnEIwEgBGZ/4I/VzUwONAcqkJZ1nXHvUdHrBXZzv4vdeuCqC/QKp3BheWxvYWTESpcCB8QgB7L+iyK7iWQ2u3OG5YgjUk37X/0IrYBBCICunPyEvgPEIOQRbQzywltNm+zh5n8KawgtCN7lVCTU28APs505YTWEAgHCo3NpZ8RAyUPs7/6DkYA/yaQ/prbwRdYiqBAgJte3QXFRZl4vc40i+BxAQHMNG9ydfdUM4NFHCuAiArEZN8ruVKQibAkSB6hzaWdfdHlwZSCkaGFzaIKkdHlwZQildmFsdWXEIKZvjB5qdtKpr1R4qbXsoidAPckxWi3zDrE+dK9/zV8Co3RhZ80CAqd2ZXJzaW9uAQ==
+
+And finally, I am proving ownership of this host by posting or
+appending to this document.
+
+View my publicly-auditable identity here: https://keybase.io/vlad_doster
+
+==================================================================
