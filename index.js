@@ -71,6 +71,7 @@ var Commands = function(hostline, user, group) {
          softLink(user, group, 'files',      'http://files.vdoster.com') + '\n' +
          softLink(user, group, 'github',     'http://github.vdoster.com') + '\n' +
          softLink(user, group, 'linkedin',   'http://linkedin.vdoster.com') + '\n' +
+         softLink(user, group, 'music',      'http://rap-diablo.vdoster.com') + '\n' +
          file(    user, group, 'keybase.txt','https://raw.githubusercontent.com/vladdoster/vdoster.com/master/keybase.txt') + '\n' +
          file(    user, group, 'resume.pdf', 'https://github.com/vladdoster/resume-src-code/raw/master/resume.pdf')
     },
