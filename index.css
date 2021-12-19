@@ -8,7 +8,7 @@ body {
   overflow: hidden;
   padding: 2rem;
   color: white;
-  font: 1.3rem Inconsolata, monospace;
+  font: 1.3em Inconsolata, monospace;
   text-shadow: 0 0 5px #C8C8C8;
   &::after {
     content: "";
@@ -31,6 +31,25 @@ body {
   background: #0080FF;
   text-shadow: none;
 }
-pre {
-  margin: 0;
+.softlink {
+	color: #32c9e3;
+	font-weight: 700 !important
 }
+.softlink-target {
+	color: #597fd6;
+	font-weight: 700 !important
+}
+.prompt-hostline {
+	color: #ACFA33;
+	font-weight: 700 !important
+}
+.prompt-normal {
+	color: #FFF5E3;
+	font-weight: 700 !important
+}
+.prompt-path {
+	color: #597fd6;
+	font-weight: 700 !important
+}
+.command-output {
+	margin: 0
