@@ -30,11 +30,12 @@ A server is required: `file://` blocks both ES modules and `fetch`, so opening
 ## Tests
 
 ```sh
-npm test          # or: node --test test/*.test.mjs
+bun test
 ```
 
-No dependencies and no build step. The suite is plain `node:test`, and GitHub
-Actions runs it on every push and pull request (`.github/workflows/test.yml`).
+No dependencies and no build step, so there is nothing to install first.
+GitHub Actions runs the same command on every push and pull request
+(`.github/workflows/test.yml`).
 
 | File | Covers |
 | --- | --- |

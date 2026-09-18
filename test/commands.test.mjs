@@ -1,4 +1,4 @@
-import { test, beforeEach } from 'node:test';
+import { test, beforeEach } from 'bun:test';
 import assert from 'node:assert/strict';
 
 // `theme` is the only command that touches the document, and only to write a

@@ -5,6 +5,6 @@
   "description": "vdoster.com - an interactive terminal",
   "type": "module",
   "scripts": {
-    "test": "node --test test/*.test.mjs"
+    "test": "bun test"
   }
 }
