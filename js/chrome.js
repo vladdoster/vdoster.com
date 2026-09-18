@@ -43,8 +43,12 @@ export function createChrome({ win, titlebar, keybar, legendEl, ctxEl, input, re
   let moved = false;
 
   const applyTransform = () => {
-    // rounded, or 13px monospace renders blurry on subpixel offsets
-    win.style.transform = `translate(${Math.round(state.tx)}px, ${Math.round(state.ty)}px)`;
+    const x = Math.round(state.tx), y = Math.round(state.ty);
+    // No transform at rest. A transform - even translate(0,0) - creates a
+    // stacking context and can hand the text to a different rasterization
+    // path, and the window sits untransformed almost all of the time.
+    // Rounded, or 13px monospace renders blurry on subpixel offsets.
+    win.style.transform = (x || y) ? `translate(${x}px, ${y}px)` : '';
   };
 
   // Apply the offset, measure what actually landed, then nudge it back inside.
@@ -81,7 +85,6 @@ export function createChrome({ win, titlebar, keybar, legendEl, ctxEl, input, re
   function endDrag(e) {
     if (!dragging) return;
     dragging = false;
-    win.style.willChange = '';
     try { if (e && e.pointerId != null) titlebar.releasePointerCapture(e.pointerId); } catch { /* detached */ }
     clamp();
   }
@@ -93,7 +96,11 @@ export function createChrome({ win, titlebar, keybar, legendEl, ctxEl, input, re
     moved = false;
     downAt = { x: e.clientX, y: e.clientY };
     origin = { x: e.clientX - state.tx, y: e.clientY - state.ty };
-    win.style.willChange = 'transform';
+    // Deliberately no `will-change: transform` here. Setting it on pointerdown
+    // and clearing it on pointerup promotes the window to its own compositor
+    // layer and drops it again, which re-rasterizes the titlebar text and
+    // reads as the text twitching down and settling back on release. The
+    // window is one small element, so the hint bought nothing anyway.
     try { titlebar.setPointerCapture(e.pointerId); } catch { /* not capturable */ }
   });
 
