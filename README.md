@@ -30,7 +30,7 @@ A server is required: `file://` blocks both ES modules and `fetch`, so opening
 ## Tests
 
 ```sh
-npm test          # or: node --test test/
+npm test          # or: node --test test/*.test.mjs
 ```
 
 No dependencies and no build step. The suite is plain `node:test`, and GitHub
