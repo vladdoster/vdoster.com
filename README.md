@@ -11,10 +11,11 @@ Static site, no build step — GitHub Pages serves the repo root as-is.
 | `index.html` | document head, the window markup, and the static `<nav>` fallback |
 | `index.css` | window chrome and palette (custom properties live in `:root`) |
 | `js/vfs.js` | **the site's content** — edit this to add or change a link |
-| `js/dom.js` | the only place text enters the DOM, and the only place navigation happens |
+| `js/dom.js` | the only place visitor text enters the DOM, and the only place navigation happens |
 | `js/commands.js` | command registry and implementations |
 | `js/terminal.js` | input loop, tokenizer, history, tab completion |
 | `js/chrome.js` | drag, traffic lights, touch key bar, clock |
+| `js/analytics.js` | the gtag bootstrap — out of line so the CSP needs no `unsafe-inline` |
 | `js/main.js` | boot and the global backtick/Escape handler |
 
 ## Developing

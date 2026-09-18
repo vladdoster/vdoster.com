@@ -23,9 +23,14 @@
      writes a validated hex into a CSS custom property. Removing it breaks dragging.
      script-src deliberately has NO 'unsafe-inline' - the one inline script below is
      allowed by its sha256 hash, and the gtag bootstrap lives in js/analytics.js. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0A3SoNnOj/VD5rKtWDb4PSvN8Br+QRibbwlM+84okfY=' https://www.googletagmanager.com; connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com; img-src 'self' data: https://*.google-analytics.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; font-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-85utiNApXBiXUrcTA6Tr9KElGKjET82UutCvxCSDoLE=' https://www.googletagmanager.com; connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com; img-src 'self' data: https://*.google-analytics.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; font-src 'self'; base-uri 'none'; form-action 'none'">
 
-<script>document.documentElement.classList.remove("no-js")</script>
+<!-- Dropping `no-js` here rather than from main.js avoids a flash of the fallback
+     nav, but it is a bet that the module will run. The load handler settles it:
+     if main.js (or anything it imports) 404s or fails to parse, nothing in js/
+     ever executes, and without this the visitor would get a dead empty terminal
+     with the links clipped to 1px. -->
+<script>document.documentElement.classList.remove("no-js");addEventListener("load",function(){if(!document.documentElement.dataset.booted)document.documentElement.classList.add("no-js")})</script>
 
 <link rel="preload" as="image" href="./assets/bg.png">
 <link rel="stylesheet" href="./index.css">
