@@ -1,7 +1,10 @@
-import { TREE, USER, HOST, pathOf, resolve, listDir } from './vfs.js';
+import { TREE, USER, HOST, pathOf, resolve, listDir, srcUrl } from './vfs.js';
 import { line, t, blank, err } from './dom.js';
 
-const specOf = (segs) => (segs.length ? '~/' + segs.join('/') : '~');
+// Every table a visitor's raw word is looked up in. A null prototype is what
+// keeps `theme constructor` and `help __proto__` from resolving to
+// Object.prototype members and sailing past the "unknown" guard below.
+const table = (o) => Object.assign(Object.create(null), o);
 
 const MODE = { dir: 'drwxr-xr-x', text: '-rw-r--r--', link: 'lrwxrwxrwx' };
 const CLS  = { dir: 't-path',    text: null,         link: 't-link'    };
@@ -10,7 +13,7 @@ const ACT  = { dir: 'cd',        text: 'cat',        link: 'open'      };
 const nameSeg = (name, node, segs) => ({
   text: name + (node.kind === 'dir' ? '/' : ''),
   cls: CLS[node.kind],
-  action: { type: ACT[node.kind], arg: specOf(segs) },
+  action: { type: ACT[node.kind], arg: pathOf(segs) },
   label: node.kind === 'link'
     ? `Open ${name} (${node.desc ?? 'external link'}) in this tab`
     : node.kind === 'dir' ? `Change to directory ${name}` : `Print ${name}`,
@@ -72,7 +75,7 @@ function cmdCd(ctx, args) {
     if (hit.node.kind === 'link') {
       out.push({ cls: 'dim', segs: [
         { text: 'hint: it is a symlink off-site - try ' },
-        { text: `open ${name}`, cls: 't-host', action: { type: 'open', arg: specOf(hit.segs) },
+        { text: `open ${name}`, cls: 't-host', action: { type: 'open', arg: pathOf(hit.segs) },
           label: `Open ${name}` },
       ]});
     }
@@ -100,7 +103,7 @@ async function cmdCat(ctx, args) {
       { segs: [
         { text: name, cls: 't-link' },
         { text: ' -> ' },
-        { text: node.url, cls: 't-path', action: { type: 'open', arg: specOf(segs) },
+        { text: node.url, cls: 't-path', action: { type: 'open', arg: pathOf(segs) },
           label: `Open ${name} in this tab` },
       ]},
       node.desc ? line(t(node.desc, 't-dim')) : blank(),
@@ -109,8 +112,14 @@ async function cmdCat(ctx, args) {
 
   let body = node.body;
   if (body == null) {
-    const url = new URL(node.src, import.meta.url);
-    const res = await fetch(url, { cache: 'no-cache' });
+    // Bounded: the caller holds the prompt readOnly for the whole await, so a
+    // request that never settles would wedge the terminal with no way out.
+    let res;
+    try {
+      res = await fetch(srcUrl(node), { cache: 'no-cache', signal: AbortSignal.timeout(8000) });
+    } catch {
+      return [err(`cat: ${name}: fetch failed`)];
+    }
     if (!res.ok) return [err(`cat: ${name}: fetch failed (${res.status})`)];
     body = (await res.text()).replace(/\n+$/, '');
   }
@@ -127,7 +136,7 @@ function bodyLine(text, links, segs) {
       return { segs: [
         { text: text.slice(0, i) },
         { text: needle, cls: 't-link',
-          action: { type: 'follow', arg: specOf(segs), key: needle },
+          action: { type: 'follow', arg: pathOf(segs), key: needle },
           label: `Open ${needle}` },
         { text: text.slice(i + needle.length) },
       ]};
@@ -146,7 +155,7 @@ function cmdOpen(ctx, args) {
 
   if (node.kind === 'dir')  return [err(`open: ${args[0]}: Is a directory`)];
   if (node.kind === 'link') { ctx.openUrl(node.url, false); return null; }
-  if (node.src)             { ctx.openUrl(new URL(node.src, import.meta.url).href, false); return null; }
+  if (node.src)             { ctx.openUrl(srcUrl(node), false); return null; }
   return [err(`open: ${args[0]}: not a page - try cat ${args[0]}`)];
 }
 
@@ -158,14 +167,14 @@ function cmdTree(ctx, args) {
   if (hit.node.kind !== 'dir') return [err(`tree: ${args[0]}: Not a directory`)];
 
   const out = [line(t(pathOf(hit.segs), 't-path'))];
-  walk(hit.node, hit.segs, '', out, ctx);
+  walk(hit.node, hit.segs, '', out);
   const n = count(hit.node);
   out.push(blank());
   out.push(line(t(`${n.dirs} director${n.dirs === 1 ? 'y' : 'ies'}, ${n.files} file${n.files === 1 ? '' : 's'}`, 't-dim')));
   return out;
 }
 
-function walk(node, segs, prefix, out, ctx) {
+function walk(node, segs, prefix, out) {
   const entries = listDir(node);
   entries.forEach(([name, child], i) => {
     const last = i === entries.length - 1;
@@ -175,7 +184,7 @@ function walk(node, segs, prefix, out, ctx) {
     if (child.kind === 'link') row.segs.push({ text: ' -> ' + child.url, cls: 't-dim' });
     out.push(row);
     // links are leaves: they point off-site, there is nothing to recurse into
-    if (child.kind === 'dir') walk(child, here, prefix + (last ? '   ' : '│  '), out, ctx);
+    if (child.kind === 'dir') walk(child, here, prefix + (last ? '   ' : '│  '), out);
   });
 }
 
@@ -235,7 +244,7 @@ function cmdHelp(ctx, args) {
     return [line(t('  ' + name.padEnd(14), 't-host'), t(cmd.desc))];
   }
   const out = [line(t('commands', 't-dim'))];
-  for (const [name, cmd] of Object.entries(COMMANDS)) {
+  for (const cmd of Object.values(COMMANDS)) {
     out.push(line(t('  ' + cmd.usage.padEnd(14), 't-host'), t(cmd.desc)));
   }
   out.push(blank());
@@ -245,11 +254,11 @@ function cmdHelp(ctx, args) {
 
 /* ---------- theme ------------------------------------------------------- */
 
-const COLORS = {
+const COLORS = table({
   mint:   '#59fda0', green:  '#ACFA33', cyan:   '#32c9e3', blue:   '#7d9ff0',
   cream:  '#FFF5E3', amber:  '#f5be4f', red:    '#ff6b6b', violet: '#cacbf9',
   white:  '#ffffff',
-};
+});
 const HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
 
 function cmdTheme(ctx, args) {
@@ -291,7 +300,7 @@ function ddOutput() {
   ].map((text) => line(t(text)));
 }
 
-const HIDDEN = {
+const HIDDEN = table({
   dd:       () => ddOutput(),
   sudo:     () => [err(`${USER} is not in the sudoers file. This incident will be reported.`)],
   uname:    () => [line(t(`${HOST} 6.1.0 #1 SMP PREEMPT_DYNAMIC x86_64 GNU/Linux`))],
@@ -309,11 +318,11 @@ const HIDDEN = {
     setTimeout(() => ctx.closeWindow(), 900);
     return out;
   },
-};
+});
 
 /* ---------- registry ---------------------------------------------------- */
 
-export const COMMANDS = {
+export const COMMANDS = table({
   ls:     { usage: 'ls',            args: 'path', desc: 'list files in the current directory',   run: cmdLs },
   cd:     { usage: 'cd <dir>',      args: 'dir',  desc: 'change directory ( .. to go up, ~ for root )', run: cmdCd },
   cat:    { usage: 'cat <file>',    args: 'path', desc: "print a file's contents",               run: cmdCat },
@@ -326,12 +335,12 @@ export const COMMANDS = {
   help:   { usage: 'help',          args: 'command', desc: 'this list',                          run: cmdHelp },
   clear:  { usage: 'clear',         args: 'none', desc: 'clear the screen',                      run: cmdClear },
   exit:   { usage: 'exit',          args: 'none', desc: 'close the terminal',                    run: cmdExit },
-};
+});
 
-export const ALIASES = {
+export const ALIASES = table({
   close: 'exit', quit: 'exit', '?': 'help', man: 'help',
   dir: 'ls', ll: 'ls', cls: 'clear', colour: 'theme', color: 'theme',
-};
+});
 
 export const COLOR_NAMES = Object.keys(COLORS);
 

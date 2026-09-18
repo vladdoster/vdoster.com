@@ -2,6 +2,8 @@
 // touch key bar and the clock. One state object, one render() - five booleans
 // mutated across six handlers is exactly where these combinations rot.
 
+import { el } from './dom.js';
+
 const coarse = matchMedia('(pointer: coarse)');
 const fine   = matchMedia('(pointer: fine)');
 
@@ -52,6 +54,12 @@ export function createChrome({ win, titlebar, keybar, legendEl, ctxEl, input, re
   function clamp() {
     applyTransform();
     const r = win.getBoundingClientRect();
+    // A closed window is display:none (index.css), so it measures 0x0 at 0,0 -
+    // which reads as "off the top-left corner" and nudges tx/ty by the margin.
+    // resize, orientationchange, the ResizeObserver and every visualViewport
+    // scroll all reach here while closed, so without this the window walks
+    // down-right a little further every time it is reopened.
+    if (!r.width && !r.height) return;
     const m = 8;
     let dx = 0, dy = 0;
 
@@ -164,7 +172,9 @@ export function createChrome({ win, titlebar, keybar, legendEl, ctxEl, input, re
     // margin:auto re-centres the smaller window, which slides the titlebar out
     // from under the cursor. Compensate so the bar stays where it was.
     state.ty += topBefore - win.getBoundingClientRect().top;
-    render();
+    // clamp() re-applies the transform, which is the only thing that changed.
+    // A second render() here would rewrite every class and aria pair to the
+    // values they already hold.
     clamp();
     if (!state.minimized && fine.matches) terminal.focus();
   }
@@ -207,9 +217,8 @@ export function createChrome({ win, titlebar, keybar, legendEl, ctxEl, input, re
     if (!coarse.matches) { keybar.hidden = true; return; }
     keybar.replaceChildren();
     for (const [label, action] of CHIPS) {
-      const chip = document.createElement('button');
+      const chip = el('button', null, label);   // dom.js owns the one text sink
       chip.type = 'button';
-      chip.textContent = label;
       // keep focus in the input so the soft keyboard does not close
       chip.addEventListener('pointerdown', (e) => e.preventDefault());
       chip.addEventListener('click', action);
@@ -232,7 +241,9 @@ export function createChrome({ win, titlebar, keybar, legendEl, ctxEl, input, re
                         String(now.getMinutes()).padStart(2, '0');
   }
   drawClock();
-  setInterval(drawClock, 30000);
+  // Skipped while the tab is hidden or the window is closed - the statusbar is
+  // not on screen either way, and visibilitychange below catches the return.
+  setInterval(() => { if (!document.hidden && state.open) drawClock(); }, 30000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) drawClock(); });
 
   /* ---------- soft keyboard ----------------------------------------------- */
@@ -241,7 +252,14 @@ export function createChrome({ win, titlebar, keybar, legendEl, ctxEl, input, re
 
   const vv = window.visualViewport;
   if (vv) {
+    let lastH = -1;
     const fit = () => {
+      // `scroll` fires at frame rate while panning a pinch-zoomed page, and a
+      // scroll never changes the height. --vvh inherits from :root, so writing
+      // it invalidates style for the whole document and resizes the window,
+      // which wakes the ResizeObserver above for a second clamp.
+      if (vv.height === lastH) return;
+      lastH = vv.height;
       document.documentElement.style.setProperty('--vvh', vv.height + 'px');
       clamp();
     };

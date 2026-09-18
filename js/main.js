@@ -11,8 +11,15 @@ const $ = (id) => document.getElementById(id);
 function bail(e) {
   document.documentElement.classList.add('no-js');
   document.documentElement.classList.remove('closed');
+  // chrome.js takes the fallback links out of the tab order while the terminal
+  // is open, and removing `closed` also hides the reopen pill. Without this the
+  // fallback comes back visible but with nothing on the page focusable - the
+  // opposite of what it is for, in the one situation it exists for.
+  for (const a of document.querySelectorAll('.fallback a')) a.removeAttribute('tabindex');
   console.error('terminal failed to start:', e);
 }
+
+let booted = false;
 
 try {
   deepFreeze(assertVfs(TREE));
@@ -41,9 +48,16 @@ try {
 
   // `ls -l` style rows wrap into mush on a narrow window; below 480px the
   // listing drops to names only.
-  new ResizeObserver(([entry]) => {
-    terminal.setNarrow(entry.contentRect.width < 480);
-  }).observe(body);
+  const contentWidth = () => {
+    const cs = getComputedStyle(body);
+    return body.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  };
+  const syncNarrow = () => terminal.setNarrow(contentWidth() < 480);
+  new ResizeObserver(syncNarrow).observe(body);
+  // Measured synchronously as well: a ResizeObserver delivers its first
+  // callback after the current task, so the boot `ls` below - the first and
+  // often only thing a visitor sees - would render wide on every phone.
+  syncNarrow();
 
   terminal.boot();
   chrome.open();
@@ -76,10 +90,17 @@ try {
   });
 
   addEventListener('pageshow', (e) => { if (e.persisted) terminal.scrollToEnd(); });
+
+  booted = true;
+  // Tells the inline script in index.html that the module really ran, so it
+  // does not put the page back into its no-JS state on load.
+  document.documentElement.dataset.booted = '1';
 } catch (e) {
   bail(e);
 }
 
-addEventListener('error', (e) => {
-  if (!document.getElementById('term-out').firstChild) bail(e.error || e.message);
-});
+// Only a failure BEFORE the terminal came up should fall back. "#term-out is
+// empty" is not that test - `clear` empties it too, so any later unrelated
+// error (an extension, a ResizeObserver loop report) used to tear down a
+// perfectly healthy terminal mid-session.
+addEventListener('error', (e) => { if (!booted) bail(e.error || e.message); });

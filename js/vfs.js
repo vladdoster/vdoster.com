@@ -35,13 +35,19 @@ export const TREE = dir({
 
 export const pathOf = (segs) => '~' + (segs.length ? '/' + segs.join('/') : '');
 
-function child(node, name) {
-  if (node.kind !== 'dir') return null;
-  if (Object.prototype.hasOwnProperty.call(node.children, name)) return node.children[name];
+// The canonical spelling of `name` under `parent`, or null. One scan, so the
+// node a lookup returns and the name `resolve` pushes can never disagree.
+function realName(parent, name) {
+  if (parent.kind !== 'dir') return null;
+  if (Object.prototype.hasOwnProperty.call(parent.children, name)) return name;
   // Silent case-insensitive fallback - rescues mobile autocapitalisation.
   const lower = name.toLowerCase();
-  const hit = Object.keys(node.children).find((k) => k.toLowerCase() === lower);
-  return hit ? node.children[hit] : null;
+  return Object.keys(parent.children).find((k) => k.toLowerCase() === lower) ?? null;
+}
+
+function child(node, name) {
+  const real = realName(node, name);
+  return real === null ? null : node.children[real];
 }
 
 // Returns { segs, node } or null. `segs` is canonical, so display always
@@ -61,20 +67,13 @@ export function resolve(cwd, spec) {
       if (segs.length) { segs.pop(); node = nodeAt(segs); }
       continue;                              // .. at root stays at root, silently
     }
-    const next = child(node, part);
-    if (!next) return null;
+    const real = realName(node, part);
+    if (real === null) return null;
     // push the canonical name, not what was typed
-    segs.push(realName(node, part));
-    node = next;
+    segs.push(real);
+    node = node.children[real];
   }
   return { segs, node };
-}
-
-function realName(parent, name) {
-  if (parent.kind !== 'dir') return name;
-  if (Object.prototype.hasOwnProperty.call(parent.children, name)) return name;
-  const lower = name.toLowerCase();
-  return Object.keys(parent.children).find((k) => k.toLowerCase() === lower) ?? name;
 }
 
 function nodeAt(segs) {
@@ -100,20 +99,42 @@ export function listDir(node) {
 // file, so it throws rather than degrading.
 const SAFE_SCHEME     = /^(?:https:|mailto:)/i;
 const INSECURE_SCHEME = /^http:/i;
+// Anything with a scheme, or scheme-relative. `src` must stay a same-origin
+// relative path: `open` navigates to it, and CSP does not police navigation.
+const OFF_ORIGIN      = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
+
+const schemeOk = (url, insecure) =>
+  SAFE_SCHEME.test(url) || (insecure === true && INSECURE_SCHEME.test(url));
+
+// `src` is resolved against this module's URL, so every consumer agrees on the
+// base no matter which file does the resolving.
+export const srcUrl = (node) => new URL(node.src, import.meta.url).href;
 
 export function assertVfs(node = TREE, path = '~') {
   if (node.kind === 'dir') {
     for (const [name, value] of Object.entries(node.children)) {
-      if (name.includes('/')) throw new Error(`vfs: "/" in name at ${path}/${name}`);
+      // `/` breaks path resolution; `"` breaks the quoting the click handler
+      // uses to round-trip a name with a space back through the tokenizer.
+      if (/[/"]/.test(name)) throw new Error(`vfs: '/' or '"' in name at ${path}/${name}`);
       assertVfs(value, `${path}/${name}`);
     }
   } else if (node.kind === 'link') {
-    const ok = SAFE_SCHEME.test(node.url) ||
-               (node.insecure === true && INSECURE_SCHEME.test(node.url));
-    if (!ok) throw new Error(`vfs: unsafe or undeclared scheme at ${path}: ${node.url}`);
+    if (!schemeOk(node.url, node.insecure)) {
+      throw new Error(`vfs: unsafe or undeclared scheme at ${path}: ${node.url}`);
+    }
   } else if (node.kind === 'text') {
     if ((node.body == null) === (node.src == null)) {
       throw new Error(`vfs: need exactly one of body|src at ${path}`);
+    }
+    if (node.src != null && OFF_ORIGIN.test(node.src)) {
+      throw new Error(`vfs: src must be a relative path at ${path}: ${node.src}`);
+    }
+    // `links` values are followed by the click handler exactly like a
+    // kind:'link' url, so they answer to the same scheme rule.
+    for (const [needle, url] of Object.entries(node.links ?? {})) {
+      if (!schemeOk(url, node.insecure)) {
+        throw new Error(`vfs: unsafe or undeclared scheme at ${path} link "${needle}": ${url}`);
+      }
     }
   } else {
     throw new Error(`vfs: unknown kind at ${path}`);

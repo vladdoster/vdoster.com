@@ -45,7 +45,8 @@ body {
   color: var(--c-text);
 }
 
-.sr-only {
+.sr-only,
+html:not(.no-js):not(.closed) .fallback {
   position: absolute !important;
   width: 1px; height: 1px;
   margin: -1px; padding: 0; border: 0;
@@ -70,13 +71,6 @@ body {
 .fallback a { color: var(--c-link); text-decoration: none; }
 .fallback a:hover, .fallback a:focus-visible { text-decoration: underline; }
 
-html:not(.no-js):not(.closed) .fallback {
-  position: absolute; width: 1px; height: 1px;
-  margin: -1px; padding: 0; border: 0;
-  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%);
-  white-space: nowrap;
-}
-
 /* ---------- window ------------------------------------------------------ */
 
 .term {
@@ -93,7 +87,11 @@ html:not(.no-js):not(.closed) .fallback {
   overflow: hidden;
 
   width:  min(720px, calc(100vw - 2rem));
-  height: min(420px, calc(100vh - 2rem));
+  /* Every variant below sets --term-h rather than `height`, so a variant can
+     never silently outrank another by specificity - which is how the mobile
+     soft-keyboard fix used to lose to .term.expanded. */
+  --term-h: min(420px, calc(100vh - 2rem));
+  height: var(--term-h);
 
   font-size: 13px;
   line-height: 1.625;
@@ -102,7 +100,7 @@ html:not(.no-js):not(.closed) .fallback {
   outline: none;
 }
 @supports (height: 100svh) {
-  .term { height: min(420px, calc(100svh - 2rem)); }
+  .term { --term-h: min(420px, calc(100svh - 2rem)); }
 }
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .term { -webkit-backdrop-filter: blur(25px); backdrop-filter: blur(25px); }
@@ -110,7 +108,7 @@ html:not(.no-js):not(.closed) .fallback {
 
 html.no-js .term, html.closed .term { display: none; }
 
-.term.expanded { width: min(820px, calc(100vw - 2rem)); height: min(70vh, calc(100vh - 2rem)); }
+.term.expanded { width: min(820px, calc(100vw - 2rem)); --term-h: min(70vh, calc(100vh - 2rem)); }
 /* No `height: auto` here: with inset:0 the height is over-constrained, so an
    auto height is DERIVED from top/bottom and stretches to fill the viewport
    instead of collapsing. chrome.js pins an explicit titlebar-sized height. */
@@ -199,13 +197,11 @@ html.no-js .term, html.closed .term { display: none; }
 .line.err  { color: var(--c-err); }
 .line.dim  { color: var(--c-dim); }
 
-.t-host { color: var(--c-host); font-weight: 700; }
-.t-path { color: var(--c-path); }
-.t-link { color: var(--c-link); font-weight: 700; }
-.t-dim  { color: var(--c-dim); }
-.t-err  { color: var(--c-err); }
-.t-hit  { color: var(--c-host); font-weight: 700; }
-
+/* Undoes the UA button styling. This MUST stay above the .t-* colours: a seg
+   carries both classes (`class="seg t-link"`), they are the same specificity,
+   and source order is the only thing that decides. Below them, `color: inherit`
+   and the font shorthand's font-weight silently flattened every clickable name
+   to plain body text. */
 .seg {
   font: inherit;
   color: inherit;
@@ -219,6 +215,13 @@ html.no-js .term, html.closed .term { display: none; }
 }
 .seg:hover { opacity: .7; }
 .seg:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+.t-host { color: var(--c-host); font-weight: 700; }
+.t-path { color: var(--c-path); }
+.t-link { color: var(--c-link); font-weight: 700; }
+.t-dim  { color: var(--c-dim); }
+.t-err  { color: var(--c-err); }
+.t-hit  { color: var(--c-host); font-weight: 700; }
 
 /* ---------- prompt ------------------------------------------------------ */
 
@@ -315,22 +318,24 @@ html.closed .reopen { display: inline-flex; }
 }
 
 @media (max-width: 640px) {
+  .term, .term.expanded {
+    width: calc(100vw - .75rem);
+    /* --vvh is the visual viewport height (chrome.js). It shrinks when the soft
+       keyboard opens; 100vh and 100svh do not, which leaves the prompt under
+       the keyboard. .term.expanded is listed here so the zoom button on a phone
+       cannot drop back to a keyboard-blind height. */
+    --term-h: calc(var(--vvh, 100vh) - 1rem);
+  }
+  @supports (height: 100svh) {
+    .term, .term.expanded { --term-h: calc(var(--vvh, 100svh) - 1rem); }
+  }
   .term {
-    width:  calc(100vw - .75rem);
-    height: calc(100vh - 1rem);
     padding-bottom: env(safe-area-inset-bottom);
     font-size: 15px;
   }
-  @supports (height: 100svh) { .term { height: calc(100svh - 1rem); } }
-  .term.expanded { width: calc(100vw - .75rem); height: calc(100vh - 1rem); }
   .titlebar, .term-body, .statusbar, .keybar { padding-inline: 1rem; }
   /* iOS auto-zooms any focused input below 16px and never zooms back out */
   .cmd { font-size: 16px; }
-}
-
-/* When the soft keyboard is up, --vvh is the visual viewport height (chrome.js) */
-@media (max-width: 640px) {
-  .term { height: calc(var(--vvh, 100vh) - 1rem); }
 }
 
 /* ---------- preferences ------------------------------------------------- */
@@ -353,7 +358,14 @@ html.closed .reopen { display: inline-flex; }
   html { background: none; }
   body { color: #000; }
   .term, .reopen { display: none !important; }
+  /* Undoes every declaration of the visually-hidden recipe above, not just the
+     geometry - overflow, padding, border and white-space were being left
+     clipped, flush to the paper edge and unwrappable. */
   .fallback { position: static !important; width: auto !important; height: auto !important;
-              clip: auto !important; clip-path: none !important; margin: 0 !important; }
+              clip: auto !important; clip-path: none !important; margin: 0 !important;
+              overflow: visible !important; padding: 2rem 1rem !important;
+              white-space: normal !important; }
+  /* --c-host is #ACFA33: about 1.3:1 on white, i.e. a blank line on paper. */
+  .fallback-hint { color: #000; }
   .fallback a { color: #000; text-decoration: underline; }
 }

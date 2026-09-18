@@ -1,5 +1,5 @@
-import { TREE, USER, HOST, pathOf, resolve, listDir } from './vfs.js';
-import { el, renderLine, renderLines, line, t, blank, err, openUrl } from './dom.js';
+import { HOST, pathOf, resolve, listDir, srcUrl } from './vfs.js';
+import { el, renderLines, line, t, blank, err, openUrl } from './dom.js';
 import { COMMANDS, ALIASES, COLOR_NAMES, lookup } from './commands.js';
 
 /* ---------- tokenizer --------------------------------------------------- */
@@ -8,6 +8,9 @@ import { COMMANDS, ALIASES, COLOR_NAMES, lookup } from './commands.js';
 
 const TOK = /"([^"]*)"|'([^']*)'|(\S+)/g;
 
+// Scrollback cap. Past this many lines, the oldest are dropped.
+const MAX_LINES = 1000;
+
 export function tokenize(str, { keepTrailingEmpty = false } = {}) {
   const out = [];
   let m;
@@ -15,6 +18,19 @@ export function tokenize(str, { keepTrailingEmpty = false } = {}) {
   while ((m = TOK.exec(str))) out.push(m[1] ?? m[2] ?? m[3]);
   if (keepTrailingEmpty && /\s$/.test(str)) out.push('');
   return out;
+}
+
+// Where the last token BEGINS in the raw string. tokenize() strips quotes, so
+// the token's length is not the width of the text it occupies: in
+// `cat "contact.txt"` the 11-character token spans 13 characters. Completion
+// has to splice over the raw span or it writes into the middle of the quotes.
+export function lastTokenStart(str) {
+  if (str === '' || /\s$/.test(str)) return str.length;   // caret starts a new word
+  let start = str.length;
+  let m;
+  TOK.lastIndex = 0;
+  while ((m = TOK.exec(str))) start = m.index;
+  return start;
 }
 
 /* ---------- history ----------------------------------------------------- */
@@ -30,7 +46,6 @@ function makeHistory() {
   let draft = '';
 
   return {
-    all: () => items,
     push(str) {
       if (str.trim() && str !== items[items.length - 1]) items.push(str);
       if (items.length > 100) items.splice(0, items.length - 100);
@@ -53,10 +68,11 @@ function makeHistory() {
 
 /* ---------- terminal ---------------------------------------------------- */
 
-export function createTerminal({ out, body, input, form, promptEl, ctxEl, closeWindow }) {
+export function createTerminal({ out, body, input, form, promptEl, closeWindow }) {
   let cwd = [];
   let narrow = false;
   let busy = false;
+  let liveSegs = [];          // the newest block of clickable segments
   const history = makeHistory();
 
   const promptSegs = () => [
@@ -68,7 +84,6 @@ export function createTerminal({ out, body, input, form, promptEl, ctxEl, closeW
   function drawPrompt() {
     promptEl.replaceChildren();
     for (const seg of promptSegs()) promptEl.append(el('span', seg.cls, seg.text));
-    if (ctxEl) ctxEl.textContent = pathOf(cwd);
   }
 
   function atBottom() {
@@ -78,10 +93,23 @@ export function createTerminal({ out, body, input, form, promptEl, ctxEl, closeW
   function print(lines) {
     if (!lines || !lines.length) return;
     const stick = atBottom();
-    // Only the newest block stays in the tab order; after five `ls` calls there
-    // would otherwise be dozens of buttons ahead of the input.
-    for (const b of out.querySelectorAll('button.seg')) b.tabIndex = -1;
-    out.append(renderLines(lines));
+    const frag = renderLines(lines);
+    const fresh = frag.querySelectorAll('button.seg');
+    // Only the newest clickable block stays in the tab order; after five `ls`
+    // calls there would otherwise be dozens of buttons ahead of the input.
+    // A block with no buttons of its own leaves the previous one reachable:
+    // demoting on every print means a bare `pwd` strips the last link on the
+    // page out of the tab order, and chrome.js has already taken the fallback
+    // <nav> out of it. Tracking the live block also keeps this off the
+    // scrollback, which querySelectorAll used to walk on every single write.
+    if (fresh.length) {
+      for (const b of liveSegs) b.tabIndex = -1;
+      liveSegs = [...fresh];
+    }
+    out.append(frag);
+    // Nothing else ever removes a line, so a long session would keep every
+    // line of every command alive and make each scrollHeight read dearer.
+    while (out.childElementCount > MAX_LINES) out.firstElementChild.remove();
     if (stick) body.scrollTop = body.scrollHeight;
   }
 
@@ -94,14 +122,19 @@ export function createTerminal({ out, body, input, form, promptEl, ctxEl, closeW
     get narrow() { return narrow; },
     setCwd(segs) { cwd = segs; drawPrompt(); },
     print,
-    clear() { out.replaceChildren(); },
+    clear() { out.replaceChildren(); liveSegs = []; },
     closeWindow,
     openUrl,
   };
 
-  async function submit(raw) {
+  async function submit(raw, { remember = true } = {}) {
+    // The lock belongs to the function that takes it. The form listener is not
+    // the only way in - the output click handler and chrome.js's touch chips
+    // both land here, and without this an awaited `cat` could be running while
+    // a second command finishes and clears busy/readOnly out from under it.
+    if (busy) return;
     echoCommand(raw);
-    history.push(raw);
+    if (remember) history.push(raw);
 
     const toks = tokenize(raw);
     if (!toks.length) return;                       // people mash Enter
@@ -125,7 +158,8 @@ export function createTerminal({ out, body, input, form, promptEl, ctxEl, closeW
     } finally {
       busy = false;
       input.readOnly = false;
-      body.scrollTop = body.scrollHeight;
+      // No scroll here: print() already honoured atBottom(), and forcing the
+      // bottom would yank a visitor who had scrolled up to copy a URL.
     }
   }
 
@@ -175,20 +209,27 @@ export function createTerminal({ out, body, input, form, promptEl, ctxEl, closeW
                                    : argCandidates(toks[0], partial);
     if (!cands.length) return;
 
+    // Measured on the raw text, not on partial.length: the tokenizer strips
+    // quotes, so `cat "contact.txt"` + Tab would otherwise splice the
+    // completion in two characters late and produce `cat "ccontact.txt `.
+    const start = lastTokenStart(head);
     const apply = (replacement) => {
-      const start = caret - partial.length;
       input.value = input.value.slice(0, start) + replacement + input.value.slice(caret);
       const pos = start + replacement.length;
       input.setSelectionRange(pos, pos);
     };
 
+    // A candidate with a space has to go back into the input quoted, or Enter
+    // tokenizes it into two words - the same round trip the click handler does.
+    // A partial (the shared-prefix case) opens the quote without closing it.
     if (cands.length === 1) {
       const only = cands[0];
-      apply(only.endsWith('/') ? only : only + ' ');
+      const tail = only.endsWith('/') ? '' : ' ';
+      apply(/\s/.test(only) ? `"${only}"${tail}` : only + tail);
       return;
     }
     const lcp = longestCommonPrefix(cands);
-    if (lcp.length > partial.length) { apply(lcp); return; }
+    if (lcp.length > partial.length) { apply(/\s/.test(lcp) ? `"${lcp}` : lcp); return; }
     print([{ segs: [...promptSegs(), { text: input.value }] },
            line(t(cands.join('   '), 't-dim'))]);
   }
@@ -225,8 +266,13 @@ export function createTerminal({ out, body, input, form, promptEl, ctxEl, closeW
       return;
     }
     if (e.key === 'c' && e.ctrlKey) {
-      // Never hijack copy - this terminal's whole content is URLs people want
+      // Never hijack copy - this terminal's whole content is URLs people want.
+      // window.getSelection() covers the scrollback but reports a selection
+      // INSIDE the input as collapsed, so the input's own range needs its own
+      // check: without it, Ctrl+A then Ctrl+C over a typed command kills the
+      // line and copies nothing.
       if (!window.getSelection().isCollapsed) return;
+      if (input.selectionStart !== input.selectionEnd) return;
       e.preventDefault();
       print([{ segs: [...promptSegs(), { text: input.value + '^C' }] }]);
       input.value = '';
@@ -252,17 +298,26 @@ export function createTerminal({ out, body, input, form, promptEl, ctxEl, closeW
     const hit = resolve([], arg);
     if (!hit) return;
 
-    if (act === 'cd')  { submit(`cd ${arg}`);  input.focus(); return; }
-    if (act === 'cat') { submit(`cat ${arg}`); input.focus(); return; }
+    // The echoed line has to survive a round trip through the tokenizer, so a
+    // VFS name containing a space needs quoting. assertVfs rejects `"` in a
+    // name, which is what makes that total.
+    const spec = /\s/.test(arg) ? `"${arg}"` : arg;
+    if (act === 'cd')  { submit(`cd ${spec}`);  input.focus(); return; }
+    if (act === 'cat') { submit(`cat ${spec}`); input.focus(); return; }
     if (act === 'open' && hit.node.kind === 'link') {
       openUrl(hit.node.url, e.metaKey || e.ctrlKey);
       return;
     }
     if (act === 'open' && hit.node.src) {
-      openUrl(new URL(hit.node.src, import.meta.url).href, e.metaKey || e.ctrlKey);
+      openUrl(srcUrl(hit.node), e.metaKey || e.ctrlKey);
       return;
     }
-    if (act === 'follow' && hit.node.links && key in hit.node.links) {
+    // hasOwnProperty, not `in`: `in` walks Object.prototype, so a key of
+    // `toString` would hand openUrl a function, which resolves as a relative
+    // path and navigates. The point of reading the URL out of the frozen TREE
+    // is that a crafted dataset cannot reach anything the VFS did not declare.
+    if (act === 'follow' && hit.node.links &&
+        Object.prototype.hasOwnProperty.call(hit.node.links, key)) {
       openUrl(hit.node.links[key], e.metaKey || e.ctrlKey);
     }
   });
@@ -284,8 +339,10 @@ export function createTerminal({ out, body, input, form, promptEl, ctxEl, closeW
     ]);
     // One synchronous ls, so the site's content is on screen for a visitor who
     // would never think to type a command. Not an animation - the prompt is
-    // usable on the same frame.
-    submit('ls');
+    // usable on the same frame. Kept out of history: the visitor did not type
+    // it, and every reload would otherwise wedge another `ls` between their
+    // real entries.
+    submit('ls', { remember: false });
   }
 
   return {

@@ -1,4 +1,7 @@
-// The only place text enters the DOM, and the only place navigation happens.
+// The only place visitor text enters the DOM, and the only place navigation
+// happens. chrome.js writes the clock and the status legend straight onto
+// their own elements, but those are constants built in that file - nothing a
+// visitor typed reaches the DOM except through el() below.
 //
 // Commands return data, never DOM and never HTML:
 //   Line    = { cls?, segs: Segment[] }
@@ -49,7 +52,10 @@ export function renderLines(lines) {
 // Plain-text line helpers, so commands stay readable.
 export const line  = (...segs) => ({ segs: segs.filter(Boolean) });
 export const t     = (text, cls) => ({ text, cls });
-export const blank = () => ({ segs: [{ text: '' }] });
+// A space, not '': an empty inline box generates a zero-height line box, so an
+// empty segment renders as no gap at all. `.line` is white-space: pre-wrap, so
+// the space survives and the separator gets a full line of height.
+export const blank = () => ({ segs: [{ text: ' ' }] });
 export const err   = (text) => ({ cls: 'err', segs: [{ text }] });
 
 const ALLOWED = new Set(['https:', 'http:', 'mailto:']);
@@ -62,8 +68,10 @@ export function openUrl(url, newTab) {
   // mailto: through window.open leaves an orphaned blank tab behind
   if (parsed.protocol === 'mailto:') { location.href = parsed.href; return true; }
 
-  // window.open does NOT imply noopener the way <a target="_blank"> does
-  if (newTab) window.open(parsed.href, '_blank', 'noopener,noreferrer');
-  else location.assign(parsed.href);
+  // window.open does NOT imply noopener the way <a target="_blank"> does, and
+  // it returns null when a popup blocker eats the tab - falling through to
+  // this tab beats a click that silently does nothing.
+  if (newTab && window.open(parsed.href, '_blank', 'noopener,noreferrer')) return true;
+  location.assign(parsed.href);
   return true;
 }
