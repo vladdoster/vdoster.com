@@ -17,17 +17,27 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Node is only the test runner here; the site itself has no runtime
+        # dependency on it. The matrix exists because the runner's own CLI
+        # behaviour differs between releases.
+        node: ['20', '22', '24']
+    name: test (node ${{ matrix.node }})
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: ${{ matrix.node }}
           # No cache: the site has no dependencies and nothing to install.
 
       # node:test only. The suite covers the VFS and command layer, the
       # tokenizer, the navigation scheme allowlist, and the static guards
       # (no HTML sinks, the CSP hash still matches its inline script, the
       # CNAME and keybase proof are intact).
+      # Globbed explicitly rather than `node --test test/`: older runners treat
+      # a bare directory as a script to execute and fail with MODULE_NOT_FOUND.
       - name: Run tests
-        run: node --test test/
+        run: node --test test/*.test.mjs
