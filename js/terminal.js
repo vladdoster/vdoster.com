@@ -333,7 +333,7 @@ export function createTerminal({ out, body, input, form, promptEl, closeWindow }
   function boot() {
     drawPrompt();
     print([
-      line(t(`${HOST} — v2`, 't-host')),
+      line(t(HOST, 't-host')),
       line(t("type 'help' for commands · tab completes · ↑ for history", 't-dim')),
       blank(),
     ]);
