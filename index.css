@@ -1,64 +1,356 @@
-.html {
-	background: radial-gradient(circle farthest-corner, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('assets/bg.png') no-repeat center center fixed;
-	background-size: cover;
-	background-color: #000
+/* vdoster.com - window chrome ported from temporal.io/thank-you,
+   content palette kept from the original site. See :root for the two
+   colours that were lightened because the originals fail WCAG AA. */
+
+:root {
+  /* chrome (Temporal, verbatim) */
+  --c-win-a:   #1f203ff5;
+  --c-win-b:   #141414e0;
+  --c-hair:    #ffffff0d;
+  --c-red:     #ee6a5f;
+  --c-yellow:  #f5be4f;
+  --c-green:   #61c554;
+
+  /* content (vdoster) */
+  --c-text:    #FFF5E3;  /* 14.5:1 */
+  --c-host:    #ACFA33;  /* 12.3:1 - the site's signature lime */
+  --c-link:    #32c9e3;  /*  7.9:1 - symlink names */
+  --c-path:    #7d9ff0;  /*  6.1:1 - was #597fd6, which measures 4.06:1 (fails AA) */
+  --c-chrome:  #8aa0bf;  /*  5.9:1 - was Temporal's #465a78, which measures 2.24:1 */
+  --c-err:     #ff6b6b;  /*  5.7:1 */
+  --c-input:   #f8fafc;
+  --c-caret:   var(--c-host);
+  --c-dim:     #7e8ca4;  /*  4.6:1 - #6f7f99 measured 3.87:1 (fails AA) */
+
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas,
+          "Liberation Mono", "Courier New", monospace;
 }
-.body {
-	color: #FFF5E3;
-	margin: 2em
+
+* { box-sizing: border-box; }
+
+html {
+  /* dim raised from the original 0.5 to 0.65 so the measured contrast
+     ratios above still hold over the bright regions of bg.png */
+  background:
+    radial-gradient(circle farthest-corner, rgba(0,0,0,.65), rgba(0,0,0,.8)),
+    url("assets/bg.png") no-repeat center center fixed;
+  background-size: cover;
+  background-color: #000;
 }
-@font-face {
-	font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
-	font-weight: 400
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--mono);
+  color: var(--c-text);
 }
-a {
-	font-weight: 700;
-	color: #597fd6
+
+.sr-only {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0; border: 0;
+  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%);
+  white-space: nowrap;
 }
-a: link,a: visited {
-	text-decoration: none
+
+/* ---------- fallback nav ------------------------------------------------ */
+/* Visible by default. Hidden only once JS has actually booted AND the
+   terminal is open, so a parse error or a closed window always leaves the
+   links reachable. */
+
+.fallback {
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: 4rem 1rem;
+  font-size: 15px;
+  line-height: 1.9;
 }
-a: hover,a: active {
-	text-decoration: underline
+.fallback-hint { color: var(--c-host); margin: 0 0 1rem; }
+.fallback ul { list-style: none; margin: 0; padding: 0; }
+.fallback a { color: var(--c-link); text-decoration: none; }
+.fallback a:hover, .fallback a:focus-visible { text-decoration: underline; }
+
+html:not(.no-js):not(.closed) .fallback {
+  position: absolute; width: 1px; height: 1px;
+  margin: -1px; padding: 0; border: 0;
+  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%);
+  white-space: nowrap;
 }
-.footer {
-	position: absolute;
-	bottom: 0;
-	right: 0;
-	padding: 1em
+
+/* ---------- window ------------------------------------------------------ */
+
+.term {
+  /* inset:0 + margin:auto centres a fixed element of definite size, and
+     re-centres itself on resize/expand - which leaves `transform` entirely
+     free for the drag offset. */
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  z-index: 9999;
+
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  width:  min(720px, calc(100vw - 2rem));
+  height: min(420px, calc(100vh - 2rem));
+
+  font-size: 13px;
+  line-height: 1.625;
+  color: var(--c-text);
+  background-image: linear-gradient(228.66deg, var(--c-win-a) 23.837%, var(--c-win-b) 99.252%);
+  outline: none;
 }
-.footer a {
-	font-weight: 400 !important
+@supports (height: 100svh) {
+  .term { height: min(420px, calc(100svh - 2rem)); }
 }
-#textarea {
-	font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
-	font-size: 1em;
-	background-color: rgba(0,0,0, 0.4);
-	width: 100%;
-	height: 100%;
-	white-space: pre;
-	margin: 0
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .term { -webkit-backdrop-filter: blur(25px); backdrop-filter: blur(25px); }
 }
-.softlink {
-	color: #32c9e3;
-	font-weight: 700 !important
+
+html.no-js .term, html.closed .term { display: none; }
+
+.term.expanded { width: min(820px, calc(100vw - 2rem)); height: min(70vh, calc(100vh - 2rem)); }
+/* No `height: auto` here: with inset:0 the height is over-constrained, so an
+   auto height is DERIVED from top/bottom and stretches to fill the viewport
+   instead of collapsing. chrome.js pins an explicit titlebar-sized height. */
+.term.minimized .term-body,
+.term.minimized .keybar,
+.term.minimized .statusbar { display: none; }
+
+/* ---------- titlebar ---------------------------------------------------- */
+
+.titlebar {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: 1.125rem 1.75rem;
+  border-bottom: 1px solid var(--c-hair);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  outline: none;
 }
-.softlink-target {
-	color: #597fd6;
-	font-weight: 700 !important
+.titlebar:active { cursor: grabbing; }
+.titlebar:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
+
+.lights { display: flex; align-items: center; gap: 14px; }
+
+.light {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 13.5px; height: 13.5px;
+  padding: 0; border: 0; border-radius: 50%;
+  cursor: pointer;
+  transition: filter .12s;
 }
-.prompt-hostline {
-	color: #ACFA33;
-	font-weight: 700 !important
+.light:hover { filter: brightness(1.1); }
+.light:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.light.red    { background: var(--c-red); }
+.light.yellow { background: var(--c-yellow); }
+.light.green  { background: var(--c-green); }
+
+.glyph {
+  width: 11px; height: 11px;
+  fill: none;
+  stroke-width: 2px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+  transition: opacity .1s;
 }
-.prompt-normal {
-	color: #FFF5E3;
-	font-weight: 700 !important
+.light:hover .glyph, .light:focus-visible .glyph { opacity: 1; }
+.red    .glyph { stroke: #8b1c14; }
+.yellow .glyph { stroke: #7b5700; }
+.green  .glyph { stroke: #1c5c14; width: 13px; height: 13px; }
+.green .g-in { display: none; }
+.term.expanded .green .g-out { display: none; }
+.term.expanded .green .g-in  { display: inline; }
+
+.title {
+  flex: 1;
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--c-chrome);
+  pointer-events: none;
 }
-.prompt-path {
-	color: #597fd6;
-	font-weight: 700 !important
+.title-spacer { width: 68px; }
+
+/* ---------- output ------------------------------------------------------ */
+
+.term-body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1.25rem 1.75rem;
+  cursor: text;
+  scrollbar-width: none;
 }
-.command-output {
-	margin: 0
+.term-body::-webkit-scrollbar { display: none; }
+
+.line {
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+.line.err  { color: var(--c-err); }
+.line.dim  { color: var(--c-dim); }
+
+.t-host { color: var(--c-host); font-weight: 700; }
+.t-path { color: var(--c-path); }
+.t-link { color: var(--c-link); font-weight: 700; }
+.t-dim  { color: var(--c-dim); }
+.t-err  { color: var(--c-err); }
+.t-hit  { color: var(--c-host); font-weight: 700; }
+
+.seg {
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  white-space: pre-wrap;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  transition: opacity .1s;
+}
+.seg:hover { opacity: .7; }
+.seg:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+/* ---------- prompt ------------------------------------------------------ */
+
+.prompt-row { display: flex; align-items: center; margin: 0; }
+.prompt { flex-shrink: 0; white-space: nowrap; user-select: none; }
+.cmd {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  color: var(--c-input);
+  background: none;
+  border: 0;
+  outline: none;
+  padding: 0;
+  caret-color: var(--c-caret);
+}
+
+/* ---------- status bar + touch key bar ---------------------------------- */
+
+.statusbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: .375rem 1.75rem;
+  font-size: 12px;
+  color: var(--c-chrome);
+  border-top: 1px solid var(--c-hair);
+}
+.ctx { font-variant-numeric: tabular-nums; }
+.legend { text-align: right; }
+
+.keybar {
+  display: flex;
+  gap: .5rem;
+  overflow-x: auto;
+  padding: .5rem 1.75rem;
+  border-top: 1px solid var(--c-hair);
+  scrollbar-width: none;
+}
+.keybar::-webkit-scrollbar { display: none; }
+.keybar button {
+  flex: none;
+  font: inherit;
+  font-size: 13px;
+  color: var(--c-text);
+  background: #ffffff14;
+  border: 1px solid var(--c-hair);
+  border-radius: 6px;
+  padding: .4rem .7rem;
+  min-height: 34px;
+  cursor: pointer;
+}
+.keybar button:active { background: #ffffff2b; }
+
+/* ---------- reopen pill ------------------------------------------------- */
+
+.reopen {
+  display: none;
+  position: fixed;
+  left: 1rem;
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+  z-index: 9999;
+  align-items: center;
+  gap: .5rem;
+  font: inherit;
+  font-size: 13px;
+  color: var(--c-text);
+  background: linear-gradient(228.66deg, var(--c-win-a) 23.837%, var(--c-win-b) 99.252%);
+  border: 1px solid var(--c-hair);
+  border-radius: 8px;
+  padding: .6rem .9rem;
+  cursor: pointer;
+}
+html.closed .reopen { display: inline-flex; }
+.reopen:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.reopen-key {
+  color: var(--c-host);
+  border: 1px solid var(--c-hair);
+  border-radius: 4px;
+  padding: 0 .35rem;
+}
+
+/* ---------- touch ------------------------------------------------------- */
+
+@media (pointer: coarse) {
+  .titlebar { cursor: default; touch-action: auto; }
+  /* 13.5px dots are far below the 44px minimum target size */
+  .light::after { content: ""; position: absolute; inset: -15px; }
+  .glyph { opacity: 1; }
+}
+
+@media (max-width: 640px) {
+  .term {
+    width:  calc(100vw - .75rem);
+    height: calc(100vh - 1rem);
+    padding-bottom: env(safe-area-inset-bottom);
+    font-size: 15px;
+  }
+  @supports (height: 100svh) { .term { height: calc(100svh - 1rem); } }
+  .term.expanded { width: calc(100vw - .75rem); height: calc(100vh - 1rem); }
+  .titlebar, .term-body, .statusbar, .keybar { padding-inline: 1rem; }
+  /* iOS auto-zooms any focused input below 16px and never zooms back out */
+  .cmd { font-size: 16px; }
+}
+
+/* When the soft keyboard is up, --vvh is the visual viewport height (chrome.js) */
+@media (max-width: 640px) {
+  .term { height: calc(var(--vvh, 100vh) - 1rem); }
+}
+
+/* ---------- preferences ------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .term { backdrop-filter: none; -webkit-backdrop-filter: none; background-image: none; background: #0b0c16; }
+  :root { --c-chrome: #c3d0e4; --c-dim: #a8b6cc; }
+}
+
+@media print {
+  html { background: none; }
+  body { color: #000; }
+  .term, .reopen { display: none !important; }
+  .fallback { position: static !important; width: auto !important; height: auto !important;
+              clip: auto !important; clip-path: none !important; margin: 0 !important; }
+  .fallback a { color: #000; text-decoration: underline; }
 }
