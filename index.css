@@ -223,7 +223,10 @@ html.no-js .term, html.closed .term { display: none; }
 /* ---------- prompt ------------------------------------------------------ */
 
 .prompt-row { display: flex; align-items: center; margin: 0; }
-.prompt { flex-shrink: 0; white-space: nowrap; user-select: none; }
+/* `pre`, not `nowrap`: both stop wrapping, but nowrap collapses the trailing
+   space of the "$ " segment, so the input sat flush against the $. The echoed
+   command lines already showed the gap because .line is pre-wrap. */
+.prompt { flex-shrink: 0; white-space: pre; user-select: none; }
 .cmd {
   flex: 1;
   min-width: 0;
