@@ -70,6 +70,36 @@ test('the audio file that used to 404 on every load is gone for good', () => {
   }
 });
 
+test('every url() in the stylesheet resolves to a file on disk', () => {
+  const css = read('index.css');
+  const urls = [...css.matchAll(/url\(["']?([^"')]+)["']?\)/g)].map(m => m[1]);
+  assert.ok(urls.length > 0);
+  for (const u of urls) {
+    if (/^(?:[a-z]+:|\/\/|data:)/i.test(u)) continue;   // nothing external is expected
+    assert.ok(existsSync(root + u), `index.css references ${u}, which is missing`);
+  }
+});
+
+// Self-hosted so the CSP can keep font-src 'self'. SIL OFL 1.1 requires the
+// licence to travel with the font.
+test('the webfont is a real woff2 and ships its licence', () => {
+  const font = root + 'assets/fonts/ServerMono-Regular.woff2';
+  assert.ok(existsSync(font), 'the Server Mono file is missing');
+  assert.equal(readFileSync(font).subarray(0, 4).toString('latin1'), 'wOF2',
+    'not a woff2 file');
+  const licence = root + 'assets/fonts/LICENSE.md';
+  assert.ok(existsSync(licence), 'OFL 1.1 requires the licence alongside the font');
+  assert.match(readFileSync(licence, 'utf8'), /SIL OPEN FONT LICENSE/i);
+});
+
+test('the font is declared and actually reached for', () => {
+  const css = read('index.css');
+  assert.match(css, /@font-face\s*\{[^}]*font-family:\s*"Server Mono"/);
+  assert.match(css, /--mono:\s*"Server Mono"/, 'the face must lead the stack or it is never used');
+  // no third-party font origin crept in
+  assert.ok(!/fonts\.googleapis|fonts\.gstatic|@import/i.test(css));
+});
+
 // Deploy guards. GitHub Pages serves this repo root directly, so losing any of
 // these breaks the live site rather than a build.
 test('the files the deploy depends on are still here', () => {
