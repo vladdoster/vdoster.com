@@ -22,8 +22,21 @@
   --c-caret:   var(--c-host);
   --c-dim:     #7e8ca4;  /*  4.6:1 - #6f7f99 measured 3.87:1 (fails AA) */
 
-  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas,
-          "Liberation Mono", "Courier New", monospace;
+  --mono: "Server Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco,
+          Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* Server Mono by Internet Development Studio Company, SIL OFL 1.1.
+   The licence travels with the font in assets/fonts/LICENSE.md.
+   Self-hosted, so the CSP keeps font-src 'self' and there is no third-party
+   request. Only the 400 weight exists, so bold is left to synthesis rather
+   than declaring a weight range the file does not actually cover. */
+@font-face {
+  font-family: "Server Mono";
+  src: url("assets/fonts/ServerMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }
 
 * { box-sizing: border-box; }
