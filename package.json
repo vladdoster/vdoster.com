@@ -1,0 +1,10 @@
+{
+  "name": "vdoster.com",
+  "version": "2.0.0",
+  "private": true,
+  "description": "vdoster.com - an interactive terminal",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/"
+  }
+}
