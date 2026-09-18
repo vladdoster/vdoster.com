@@ -1,8 +1,7 @@
-import { test } from 'node:test';
+import { test } from 'bun:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -22,11 +21,13 @@ test('no HTML-string or code-construction sinks anywhere in js/', () => {
   }
 });
 
-test('every module parses, including the ones node cannot import', () => {
+// chrome.js, main.js and analytics.js touch window/matchMedia at module scope,
+// so they cannot simply be imported here. Transpiling is enough to prove they
+// parse, which is what catches a syntax error before it ships.
+test('every module parses, including the ones that need a DOM', () => {
+  const transpiler = new Bun.Transpiler({ loader: 'js' });
   for (const f of jsFiles) {
-    assert.doesNotThrow(
-      () => execFileSync(process.execPath, ['--check', root + 'js/' + f], { stdio: 'pipe' }),
-      `js/${f} does not parse`);
+    assert.doesNotThrow(() => transpiler.transformSync(read(`js/${f}`)), `js/${f} does not parse`);
   }
 });
 

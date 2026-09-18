@@ -1,4 +1,4 @@
-import { test, beforeEach } from 'node:test';
+import { test, beforeEach } from 'bun:test';
 import assert from 'node:assert/strict';
 
 // dom.js uses location.assign() for pages and sets location.href for mailto,
