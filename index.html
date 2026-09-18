@@ -1,25 +1,97 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" class="html">
-  <head "http://www.w3.org/2005/10/profile">
-    <meta charset="UTF-8" />
-    <title>vdoster</title>
-    <meta name="robots" content="noodp" />
-    <meta name="description" content="You found me..." />
-    <link rel="icon" href="./assets/favicon.ico" />
-    <link rel="shortcut icon" href="./assets/favicon.ico" />
-    <link rel="stylesheet" type="text/css" href="index.css" media="all">
-    <style type="text/css" media="screen" rel="stylesheet"></style>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DY1J66LGP0"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date()); gtag('config', 'G-DY1J66LGP0');
-    </script>
-    <script src="index.js"></script>
-  </head>
-  <body class="body" onLoad="new Scroller('textarea')">
-    <div id="textarea"></div>
-    <div class=footer>
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+<title>Vlad Doster — vdoster.com</title>
+<meta name="description" content="You found me. An interactive terminal: type ls.">
+<link rel="canonical" href="https://vdoster.com/">
+<meta name="theme-color" content="#141414">
+<meta name="color-scheme" content="dark">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://vdoster.com/">
+<meta property="og:title" content="Vlad Doster — vdoster.com">
+<meta property="og:description" content="You found me. An interactive terminal: type ls.">
+<meta property="og:image" content="https://vdoster.com/assets/bg.png">
+<meta property="og:image:width" content="1920">
+<meta property="og:image:height" content="1080">
+<meta name="twitter:card" content="summary_large_image">
+
+<!-- style-src needs 'unsafe-inline': drag writes element.style.transform and `theme`
+     writes a validated hex into a CSS custom property. Removing it breaks dragging.
+     script-src deliberately has NO 'unsafe-inline' - the one inline script below is
+     allowed by its sha256 hash, and the gtag bootstrap lives in js/analytics.js. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0A3SoNnOj/VD5rKtWDb4PSvN8Br+QRibbwlM+84okfY=' https://www.googletagmanager.com; connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com; img-src 'self' data: https://*.google-analytics.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; font-src 'self'; base-uri 'none'; form-action 'none'">
+
+<script>document.documentElement.classList.remove("no-js")</script>
+
+<link rel="preload" as="image" href="./assets/bg.png">
+<link rel="stylesheet" href="./index.css">
+<link rel="icon" href="./assets/favicon.ico" sizes="any">
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DY1J66LGP0"></script>
+<script type="module" src="./js/main.js"></script>
+</head>
+
+<body>
+<h1 class="sr-only">Vlad Doster — vdoster.com</h1>
+
+<!-- Permanent, real anchors. Today every link lives only in a JS string, so crawlers,
+     link unfurlers and archive.org see an empty page. This is also what a visitor gets
+     with JS off, after a JS error, when the terminal is closed, and on Cmd+P. -->
+<nav class="fallback" aria-label="Links">
+  <p class="fallback-hint"><span aria-hidden="true">&gt;_</span> vlad@vdoster.com</p>
+  <ul>
+    <li><a href="https://github.com/vladdoster/">github</a></li>
+    <li><a href="https://www.linkedin.com/in/vlad-doster/">linkedin</a></li>
+    <li><a href="http://rap-diablo.vdoster.com">music</a></li>
+    <li><a href="./keybase.txt">keybase.txt</a></li>
+    <li><a href="mailto:mvdoster@gmail.com">mvdoster@gmail.com</a></li>
+  </ul>
+</nav>
+
+<section id="term" class="term" role="region" aria-label="vdoster.com terminal" tabindex="-1">
+  <header class="titlebar" id="term-titlebar" role="toolbar"
+          aria-label="Terminal window controls" tabindex="0">
+    <div class="lights">
+      <button type="button" class="light red" data-act="close" aria-label="Close terminal">
+        <svg class="glyph" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M3.5 3.5l5 5M8.5 3.5l-5 5"/></svg>
+      </button>
+      <button type="button" class="light yellow" data-act="minimize" aria-label="Minimize terminal" aria-pressed="false">
+        <svg class="glyph" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M3 6h6"/></svg>
+      </button>
+      <button type="button" class="light green" data-act="zoom" aria-label="Expand terminal" aria-pressed="false">
+        <svg class="glyph" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path class="g-out" d="M6.5 6.5h2.5M6.5 6.5v2.5M5.5 5.5h-2.5M5.5 5.5v-2.5"/><path class="g-in" d="M8 4h-2.5M8 4v2.5M4 8h2.5M4 8v-2.5"/></svg>
+      </button>
     </div>
-  </body>
+    <div class="title">vdoster.com</div>
+    <div class="title-spacer"></div>
+  </header>
+
+  <div class="term-body" id="term-body">
+    <div id="term-out" role="log" aria-relevant="additions"></div>
+    <form class="prompt-row" id="term-form" autocomplete="off">
+      <span class="prompt" id="term-prompt" aria-hidden="true"></span>
+      <label class="sr-only" for="term-input">Terminal input</label>
+      <input class="cmd" id="term-input" type="text" enterkeyhint="go"
+             autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"
+             data-1p-ignore data-lpignore="true" maxlength="512">
+    </form>
+  </div>
+
+  <!-- Touch devices have no Tab and no arrow keys. Populated by chrome.js. -->
+  <div class="keybar" id="term-keybar" aria-label="Terminal shortcuts" hidden></div>
+
+  <footer class="statusbar">
+    <span class="ctx" id="term-ctx"></span>
+    <span class="legend" id="term-legend"></span>
+  </footer>
+</section>
+
+<button type="button" id="term-reopen" class="reopen">
+  <span class="reopen-key" aria-hidden="true">`</span> open terminal
+</button>
+</body>
 </html>
